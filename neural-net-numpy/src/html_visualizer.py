@@ -31,7 +31,9 @@ class HTMLVisualizer:
         fig = make_subplots(
             rows=2, cols=2,
             subplot_titles=('Training Loss', 'Weight Distribution', 
-                          'Activation Patterns', 'Network Architecture')
+                          'Activation Patterns', 'Network Architecture'),
+            vertical_spacing=0.15,
+            horizontal_spacing=0.1
         )
         
         # Add loss curve
@@ -40,49 +42,49 @@ class HTMLVisualizer:
         
         # Add weight distribution
         weights = self.training_history[-1]['weights']
-        fig.add_trace(go.Histogram(x=weights.flatten(), name='Weights'), 
-                     row=1, col=2)
+        fig.add_trace(go.Histogram(x=weights.flatten(), name='Weights'), row=1, col=2)
         
-        # Add activation patterns
+        # Enhanced activation patterns
         activations = self.training_history[-1]['activations']
-        fig.add_trace(go.Heatmap(z=activations), row=2, col=1)
-        
-        # Add network architecture
-        layer_sizes = [784] + [layer.weights.shape[0] for layer in self.layers]
-        layer_names = ['Input'] + [f'Dense {i+1}' for i in range(len(self.layers))]
-        
-        # Create nodes for each layer
-        x_positions = np.linspace(0, 1, len(layer_sizes))
-        y_positions = np.zeros_like(x_positions)
-        
-        # Add nodes (layers)
         fig.add_trace(
-            go.Scatter(
-                x=x_positions,
-                y=y_positions,
-                mode='markers+text',
-                marker=dict(size=20),
-                text=layer_names,
-                textposition='top center',
-                hovertext=[f'Size: {size}' for size in layer_sizes],
-                name='Layers'
-            ),
+            go.Heatmap(
+                z=activations,
+                colorscale='Viridis',
+                showscale=True,
+                name='Activations'
+            ), 
             row=2, col=1
         )
         
-        # Add edges (connections)
-        for i in range(len(layer_sizes)-1):
-            fig.add_trace(
-                go.Scatter(
-                    x=[x_positions[i], x_positions[i+1]],
-                    y=[y_positions[i], y_positions[i+1]],
-                    mode='lines',
-                    line=dict(width=1),
-                    showlegend=False
-                ),
-                row=2, col=1
-            )
+        # Network architecture visualization
+        layer_sizes = [784] + [layer.weights.shape[0] for layer in self.layers]
+        x_pos = np.linspace(0, 1, len(layer_sizes))
+        y_pos = np.zeros(len(layer_sizes))
+        
+        fig.add_trace(
+            go.Scatter(
+                x=x_pos,
+                y=y_pos,
+                mode='markers+text',
+                marker=dict(size=30, color='lightblue'),
+                text=[f'Layer {i}<br>{s} units' for i, s in enumerate(layer_sizes)],
+                textposition='top center',
+                name='Layers'
+            ),
+            row=2, col=2
+        )
         
         # Update layout
-        fig.update_layout(showlegend=True, height=800)
+        fig.update_layout(
+            height=800,
+            showlegend=True,
+            font=dict(size=14),
+            title_font=dict(size=16),
+            plot_bgcolor='white'
+        )
+        
+        # Update axes
+        for i in fig['layout']['annotations']:
+            i['font'] = dict(size=16, color='black')
+        
         fig.write_html(self.dashboard_path)

@@ -12,6 +12,9 @@ A from-scratch implementation of backpropagation using only NumPy. Built to unde
 - Cross-entropy loss
 - MNIST dataset training example
 
+## Training Visualization
+![Training Progress](src/results/training_animation.gif)
+
 ## Core Components
 ```python
 # Key mathematical operations implemented:

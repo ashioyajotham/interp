@@ -50,6 +50,8 @@ from html_visualizer import HTMLVisualizer
 import os
 import shutil
 from tqdm import tqdm
+from PIL import Image
+import glob
 
 # Load MNIST
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -118,3 +120,18 @@ for epoch in tqdm(range(epochs), desc='Training'):
         tqdm.write(f'Epoch {epoch:3d} | Loss: {loss:.6f}')
         visualizer.update(epoch, loss, X[0:1], hidden_states)
         html_viz.update(epoch, loss, network[0].weights, hidden_states[-1])
+
+# After training loop
+def create_gif():
+    frames = []
+    imgs = glob.glob("src/results/frame_*.png")
+    imgs.sort()
+    for i in imgs:
+        frames.append(Image.open(i))
+    frames[0].save(
+        "src/results/training_animation.gif",
+        save_all=True,
+        append_images=frames[1:],
+        duration=200,
+        loop=0
+    )

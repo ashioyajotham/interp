@@ -259,3 +259,8 @@ class NetworkVisualizer:
             plt.title(f'Layer {i} Activations - Epoch {epoch}')
             plt.savefig(f'{self.save_dir}/activations/layer_{i}_epoch_{epoch}.png')
             plt.close()
+
+    def save_animation_frame(self, epoch):
+        """Save current figure state for animation"""
+        frame_path = os.path.join(self.save_dir, f'frame_{epoch:03d}.png')
+        self.fig.savefig(frame_path)
