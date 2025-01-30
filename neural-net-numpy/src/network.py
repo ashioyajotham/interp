@@ -1,35 +1,40 @@
-class NeuralNetwork:
-    def __init__(self):
-        self.layers = []
+import numpy as np
 
-    def add_layer(self, layer):
-        self.layers.append(layer)
+class Layer:
+    def forward(self, input):
+        raise NotImplementedError
+        
+    def backward(self, output_gradient, learning_rate):
+        raise NotImplementedError
 
-    def forward(self, X):
-        for layer in self.layers:
-            X = layer.forward(X)
-        return X
+class Dense(Layer):
+    def __init__(self, input_size, output_size):
+        self.weights = np.random.randn(output_size, input_size) * 0.01
+        self.bias = np.zeros((output_size, 1))
+        
+    def forward(self, input):
+        self.input = input
+        return np.dot(self.weights, input) + self.bias
+        
+    def backward(self, output_gradient, learning_rate):
+        weights_gradient = np.dot(output_gradient, self.input.T)
+        input_gradient = np.dot(self.weights.T, output_gradient)
+        self.weights -= learning_rate * weights_gradient
+        self.bias -= learning_rate * output_gradient
+        return input_gradient
 
-    def backward(self, X, y, output):
-        loss = self.loss_function(output, y)
-        grad = self.loss_derivative(output, y)
-        for layer in reversed(self.layers):
-            grad = layer.backward(grad)
+class Activation:
+    @staticmethod
+    def relu(x):
+        return np.maximum(0, x)
 
-    def loss_function(self, output, y):
-        # Implement loss function (e.g., cross-entropy)
-        pass
+    @staticmethod
+    def relu_derivative(x):
+        return x > 0
 
-    def loss_derivative(self, output, y):
-        # Implement derivative of loss function
-        pass
+    @staticmethod
+    def softmax(x):
+        exp_x = np.exp(x - np.max(x, axis=0, keepdims=True))
+        return exp_x / np.sum(exp_x, axis=0, keepdims=True)
 
-    def train(self, X, y, epochs, learning_rate):
-        for epoch in range(epochs):
-            output = self.forward(X)
-            self.backward(X, y, output)
-            # Update weights here
-            pass
-
-    def predict(self, X):
-        return self.forward(X)
+__all__ = ['Layer', 'Dense', 'Activation']
