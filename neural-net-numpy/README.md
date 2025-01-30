@@ -14,10 +14,10 @@ A from-scratch implementation of backpropagation using only NumPy. Built to unde
 
 ## Training Visualization
 Latest training run:
-<img src="src/results/training_animation.gif" width="800">
+<img src="src/results/run_20250130_191546/training_animation.gif" width="800">
 
 ## Interactive Dashboard
-<img src="src/results/dashboard/epoch_0090.png" width="800">
+<img src="src/results/run_20250130_191546/dashboard/epoch_0090.png" width="800">
 
 ## Core Components
 ```python
