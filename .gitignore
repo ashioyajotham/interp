@@ -31,6 +31,8 @@ wheels/
 .idea/
 *.swp
 *.swo
+*.swn
+*.dist
 
 # Project specific
 *.npz
