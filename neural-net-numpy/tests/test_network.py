@@ -14,16 +14,26 @@ class TestNeuralNetwork(unittest.TestCase):
         self.network.add(Dense(128, 10))   # Hidden layer to output layer
 
     def test_forward_pass(self):
-        input_data = np.random.rand(784, 1)  # Random input for testing
+        # Input shape: (batch_size, input_features)
+        input_data = np.random.rand(1, 784)
         output = self.network.forward(input_data)
-        self.assertEqual(output.shape, (10, 1))  # Output should be of shape (10, 1)
+        self.assertEqual(output.shape, (1, 10))
 
     def test_backpropagation(self):
         input_data = np.random.rand(1, 784)
-        target = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 1]])  # One-hot encoded target
+        target = np.zeros((1, 10))
+        target[0, 0] = 1  # One-hot encoded target
+        
+        # Forward pass
         output = self.network.forward(input_data)
-        loss = self.network.backward(target)
-        self.assertIsNotNone(loss)  # Loss should be calculated
+        self.assertEqual(output.shape, (1, 10))
+        
+        # Backward pass
+        gradient = output - target
+        for layer in reversed(self.network.layers):
+            gradient = layer.backward(gradient, learning_rate=0.01)
+            
+        self.assertEqual(gradient.shape, (1, 784))
 
     def test_add_layer(self):
         initial_layers = len(self.network.layers)
