@@ -26,4 +26,3 @@ forward_pass = inputs @ weights + bias
 backward_pass = gradient @ weights.T  # Chain rule
 weight_updates = learning_rate * input.T @ gradient
 ```
-````markdown
