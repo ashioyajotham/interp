@@ -1,3 +1,22 @@
+"""
+Neural Network Visualization Module
+
+This module provides real-time visualization of neural network training:
+- Weight matrices evolution
+- Activation patterns
+- Training loss curves
+- Hidden layer representations using t-SNE
+
+Key Components:
+- NetworkVisualizer: Main class for creating interactive dashboards
+- Real-time plotting using matplotlib
+- t-SNE dimensionality reduction for hidden layers
+
+Usage:
+    visualizer = NetworkVisualizer(network_layers)
+    visualizer.update(epoch, loss, input_data, hidden_states)
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -8,35 +27,63 @@ from datetime import datetime
 plt.style.use('dark_background')
 
 class NetworkVisualizer:
-    def __init__(self, layers, save_dir='src/results'):
+    """Interactive visualization dashboard for neural network training.
+    
+    Attributes:
+        layers: List of network layers
+        training_losses: History of training losses
+        activation_history: History of layer activations
+        fig: Main matplotlib figure
+        gs: GridSpec for subplot layout
+    """
+
+    def __init__(self, layers, results_dir='results'):
+        """Initialize visualization dashboard.
+        
+        Args:
+            layers: List of neural network layers
+        """
         self.layers = layers
-        self.save_dir = save_dir
         self.training_losses = []
         self.activation_history = []
+        self.results_dir = results_dir
+        self._setup_dirs()
+        
         plt.ion()  # Interactive mode
-        self._create_dirs()
+        self.fig = plt.figure(figsize=(20, 12))
+        self.gs = GridSpec(2, 3, figure=self.fig, hspace=0.4, wspace=0.3)
         
-        # Create main figure with grid layout
-        self.fig = plt.figure(figsize=(20, 10))
-        self.gs = GridSpec(2, 3, figure=self.fig)
+        # Create subplots with adjusted positions
+        self.weight_ax = self.fig.add_subplot(self.gs[0, 0])
+        self.act_ax = self.fig.add_subplot(self.gs[0, 1])
+        self.loss_ax = self.fig.add_subplot(self.gs[0, 2])
+        self.tsne_ax = self.fig.add_subplot(self.gs[1, :])
         
-        # Initialize subplots
-        self.weight_ax = self.fig.add_subplot(self.gs[0, 0])  # Weights
-        self.act_ax = self.fig.add_subplot(self.gs[0, 1])     # Activations
-        self.loss_ax = self.fig.add_subplot(self.gs[0, 2])    # Loss curve
-        self.tsne_ax = self.fig.add_subplot(self.gs[1, :])    # t-SNE viz
+        # Adjust title padding for all subplots
+        for ax in [self.weight_ax, self.act_ax, self.loss_ax, self.tsne_ax]:
+            ax.set_title('Initializing...', pad=20)
         
-        self.fig.tight_layout()
+        self.fig.suptitle('Neural Network Training Visualization', fontsize=16, y=0.98)
         plt.show()
 
-    def _create_dirs(self):
-        """Create directories for saving visualizations"""
-        dirs = ['weights', 'activations', 'training']
-        for d in dirs:
-            os.makedirs(os.path.join(self.save_dir, d), exist_ok=True)
+    def _setup_dirs(self):
+        """Create directory structure for results"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.save_dir = os.path.join(self.results_dir, f'run_{timestamp}')
+        
+        # Create subdirectories
+        for subdir in ['dashboard', 'weights', 'activations', 'loss']:
+            os.makedirs(os.path.join(self.save_dir, subdir), exist_ok=True)
 
     def update(self, epoch, loss, input_data, hidden_states):
-        """Update all visualizations"""
+        """Update all visualizations with current training state.
+        
+        Args:
+            epoch: Current training epoch
+            loss: Current loss value
+            input_data: Batch of input data
+            hidden_states: List of layer activations
+        """
         self.training_losses.append(loss)
         self.activation_history.extend(hidden_states[-1])
         
@@ -71,6 +118,11 @@ class NetworkVisualizer:
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
         plt.pause(0.01)
+        
+        # Save dashboard snapshot
+        if epoch % 10 == 0:
+            save_path = os.path.join(self.save_dir, 'dashboard', f'epoch_{epoch:04d}.png')
+            self.fig.savefig(save_path, bbox_inches='tight', dpi=150)
 
     def plot_weights(self, layer_idx=0):
         """Visualize weights as a heatmap"""
