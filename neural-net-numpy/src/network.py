@@ -9,7 +9,8 @@ class Layer:
 
 class Dense(Layer):
     def __init__(self, input_size, output_size):
-        self.weights = np.random.randn(output_size, input_size) * 0.01
+        # He initialization
+        self.weights = np.random.randn(output_size, input_size) * np.sqrt(2.0/input_size)
         self.bias = np.zeros((output_size, 1))
         
     def forward(self, input):
@@ -19,6 +20,12 @@ class Dense(Layer):
     def backward(self, output_gradient, learning_rate):
         weights_gradient = np.dot(output_gradient, self.input.T)
         input_gradient = np.dot(self.weights.T, output_gradient)
+        
+        # Gradient clipping
+        norm = np.linalg.norm(weights_gradient)
+        if norm > 1.0:
+            weights_gradient = weights_gradient / norm
+            
         self.weights -= learning_rate * weights_gradient
         self.bias -= learning_rate * output_gradient
         return input_gradient
@@ -30,7 +37,7 @@ class Activation:
 
     @staticmethod
     def relu_derivative(x):
-        return x > 0
+        return (x > 0).astype(float)
 
     @staticmethod
     def softmax(x):

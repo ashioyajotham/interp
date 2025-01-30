@@ -18,25 +18,38 @@ network = [
     Dense(128, 10)
 ]
 
-# Training loop
+# Training parameters
 epochs = 100
-learning_rate = 0.1
+learning_rate = 0.01
+batch_size = 32
 
+# Training loop with batches
 for epoch in range(epochs):
     error = 0
-    for x, y in zip(X, Y):
-        # Forward pass
-        output = x
-        for layer in network:
-            output = Activation.relu(layer.forward(output))
-        output = Activation.softmax(output)
+    # Create mini-batches
+    indices = np.random.permutation(len(X))
+    for start_idx in range(0, len(X), batch_size):
+        batch_indices = indices[start_idx:start_idx + batch_size]
+        batch_X = X[batch_indices]
+        batch_Y = Y[batch_indices]
         
-        # Backward pass
-        grad = output - y
-        for layer in reversed(network):
-            grad = layer.backward(grad, learning_rate)
+        batch_error = 0
+        for x, y in zip(batch_X, batch_Y):
+            # Forward pass
+            output = x
+            for layer in network:
+                output = Activation.relu(layer.forward(output))
+            output = Activation.softmax(output)
             
-        error += np.mean(np.abs(grad))
-    
+            # Loss computation
+            batch_error -= np.sum(y * np.log(output + 1e-15))
+            
+            # Backward pass
+            grad = output - y
+            for layer in reversed(network):
+                grad = layer.backward(grad, learning_rate)
+                
+        error += batch_error / batch_size
+        
     if epoch % 10 == 0:
-        print(f'Epoch {epoch}, Error: {error/len(X)}')
+        print(f'Epoch {epoch}, Loss: {error/len(X)}')
