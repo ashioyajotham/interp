@@ -1,2 +1,44 @@
-venv
-.dist
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+*.npz
+*.npy
+logs/
+outputs/
+mnist_data/
+
+# Windows specific
+Thumbs.db
+Desktop.ini
