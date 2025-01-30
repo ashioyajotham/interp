@@ -16,33 +16,31 @@ class NeuralNetwork:
 class Layer:
     def forward(self, input):
         raise NotImplementedError
-        
+    
     def backward(self, output_gradient, learning_rate):
         raise NotImplementedError
 
 class Dense(Layer):
     def __init__(self, input_size, output_size):
+        # He initialization
         self.weights = np.random.randn(output_size, input_size) * np.sqrt(2.0/input_size)
-        self.bias = np.zeros((output_size, 1))
+        self.bias = np.zeros((1, output_size))
         
     def forward(self, input):
         self.input = input
-        # Reshape input if needed
-        if len(input.shape) == 2:
-            self.input = input.T
-        return (np.dot(self.weights, self.input) + self.bias).T
-
+        # Input shape: (batch_size, input_size)
+        # Output shape: (batch_size, output_size)
+        return np.dot(input, self.weights.T) + self.bias
+        
     def backward(self, output_gradient, learning_rate):
-        if len(output_gradient.shape) == 2:
-            output_gradient = output_gradient.T
-            
-        weights_gradient = np.dot(output_gradient, self.input.T)
-        input_gradient = np.dot(self.weights.T, output_gradient)
+        # output_gradient shape: (batch_size, output_size)
+        weights_gradient = np.dot(output_gradient.T, self.input)
+        input_gradient = np.dot(output_gradient, self.weights)
         
         self.weights -= learning_rate * weights_gradient
-        self.bias -= learning_rate * np.sum(output_gradient, axis=1, keepdims=True)
+        self.bias -= learning_rate * np.sum(output_gradient, axis=0, keepdims=True)
         
-        return input_gradient.T
+        return input_gradient
 
 class Activation:
     @staticmethod
