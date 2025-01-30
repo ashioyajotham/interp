@@ -42,18 +42,19 @@ class TestNeuralNetwork(unittest.TestCase):
 
 class TestNetwork(unittest.TestCase):
     def setUp(self):
-        self.dense = Dense(3, 2)  # Test with small dimensions
-        self.input_data = np.array([[1], [2], [3]])
+        self.dense = Dense(3, 2)  # 3 inputs, 2 outputs
+        # Change input shape to (batch_size, features)
+        self.input_data = np.array([[1, 2, 3]])  # (1,3) shape
 
     def test_dense_forward(self):
         output = self.dense.forward(self.input_data)
-        self.assertEqual(output.shape, (2, 1))
+        self.assertEqual(output.shape, (1, 2))  # (batch_size, output_features)
 
     def test_dense_backward(self):
         output = self.dense.forward(self.input_data)
-        gradient = np.array([[0.1], [0.2]])
+        gradient = np.array([[0.1, 0.2]])  # (batch_size, output_features)
         backward_output = self.dense.backward(gradient, 0.1)
-        self.assertEqual(backward_output.shape, (3, 1))
+        self.assertEqual(backward_output.shape, (1, 3))  # (batch_size, input_features)
 
     def test_relu_activation(self):
         x = np.array([-1, 0, 1])
@@ -61,10 +62,10 @@ class TestNetwork(unittest.TestCase):
         np.testing.assert_array_equal(output, [0, 0, 1])
 
     def test_softmax_activation(self):
-        x = np.array([[1], [2], [3]])
+        x = np.array([[1.0, 2.0, 3.0]])  # (1,3) shape
         output = Activation.softmax(x)
-        self.assertTrue(np.isclose(np.sum(output), 1))
-        self.assertEqual(output.shape, (3, 1))
+        # Test row-wise normalization
+        self.assertTrue(np.allclose(np.sum(output, axis=1), 1.0))
 
 if __name__ == '__main__':
     unittest.main()
