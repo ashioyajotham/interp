@@ -1,7 +1,9 @@
 # Neural Network Implementation from Scratch
 
 ## Overview
-A numpy implementation of a neural network with backpropagation, trained on MNIST dataset. The network is trained using mini-batch gradient descent and cross-entropy loss. The training process is visualized in an interactive dashboard.
+A from-scratch implementation of backpropagation using only NumPy. Built to understand the fundamentals of neural networks by implementing `gradient descent` and the `chain rule`.
+
+* Backpropagation is the process of calculating the gradient of the loss function with respect to the weights of the network.
 
 ## Features
 - Dense layers with customizable units
@@ -12,10 +14,10 @@ A numpy implementation of a neural network with backpropagation, trained on MNIS
 
 ## Training Visualization
 Latest training run:
-<img src="src/results/latest/training_animation.gif" width="800">
+<img src="src/results/training_animation.gif" width="800">
 
 ## Interactive Dashboard
-<img src="src/results/latest/dashboard.png" width="800">
+<img src="src/results/dashboard/epoch_0090.png" width="800">
 
 ## Core Components
 ```python
