@@ -17,10 +17,7 @@ Language models are AI models that are trained to predict the next word in a seq
 1. [Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/)
 2. [Interpretable AI](https://www.interpretable.ai/)
 3. [Interpretable Machine Learning: A Guide for Making Black Box Models Explainable](https://christophm.github.io/interpretable-ml-book/)
-4. [Interpretable Machine Learning: A Brief History, State-of-the-Art and Challenges](https://arxiv.org/abs/2102.00368)
-5. [Interpretable Machine Learning: Definitions, Methods, and Applications](https://arxiv.org/abs/2102.00368)
-6. [Interpretable Machine Learning: A Survey of Methods and Techniques](https://arxiv.org/abs/2102.00368)
-7. [Interpretable Machine Learning: A Review and New Perspectives](https://arxiv.org/abs/2102.00368)
+
 
 Inspiration
 - The works of [Chris Olah](https://colah.github.io/) and [Neel Nanda](https://www.neelnanda.io/about); researchers who have made significant contributions to the field of AI interpretability.
