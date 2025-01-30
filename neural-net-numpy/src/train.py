@@ -119,6 +119,7 @@ for epoch in tqdm(range(epochs), desc='Training'):
         loss = error/len(X)
         tqdm.write(f'Epoch {epoch:3d} | Loss: {loss:.6f}')
         visualizer.update(epoch, loss, X[0:1], hidden_states)
+        visualizer.save_animation_frame(epoch)
         html_viz.update(epoch, loss, network[0].weights, hidden_states[-1])
 
 # After training loop
@@ -135,3 +136,5 @@ def create_gif():
         duration=200,
         loop=0
     )
+
+visualizer.save_animation()

@@ -24,6 +24,8 @@ import seaborn as sns
 from sklearn.manifold import TSNE
 import os
 from datetime import datetime
+from PIL import Image
+import io
 plt.style.use('dark_background')
 
 class NetworkVisualizer:
@@ -47,6 +49,7 @@ class NetworkVisualizer:
         self.training_losses = []
         self.activation_history = []
         self.results_dir = results_dir
+        self.frames = []  # Store frames in memory
         self._setup_dirs()
         
         plt.ion()  # Interactive mode
@@ -261,6 +264,19 @@ class NetworkVisualizer:
             plt.close()
 
     def save_animation_frame(self, epoch):
-        """Save current figure state for animation"""
-        frame_path = os.path.join(self.save_dir, f'frame_{epoch:03d}.png')
-        self.fig.savefig(frame_path)
+        """Capture current figure state"""
+        buf = io.BytesIO()
+        self.fig.savefig(buf, format='png', bbox_inches='tight')
+        buf.seek(0)
+        self.frames.append(Image.open(buf))
+        
+    def save_animation(self):
+        """Generate final animation"""
+        if self.frames:
+            self.frames[0].save(
+                os.path.join(self.save_dir, 'training_animation.gif'),
+                save_all=True,
+                append_images=self.frames[1:],
+                duration=200,
+                loop=0
+            )
