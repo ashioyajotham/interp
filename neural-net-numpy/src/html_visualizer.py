@@ -6,11 +6,12 @@ from datetime import datetime
 import plotly.express as px
 
 class HTMLVisualizer:
-    def __init__(self, layers, save_dir='results/html'):
+    def __init__(self, layers, save_dir='results'):
         self.layers = layers
         self.save_dir = save_dir
         self.training_history = []
-        os.makedirs(save_dir, exist_ok=True)
+        # Single dashboard path
+        self.dashboard_path = os.path.join(save_dir, 'dashboard.html')
         
     def update(self, epoch, loss, weights, activations):
         """Update training history and generate HTML report"""
@@ -21,11 +22,12 @@ class HTMLVisualizer:
             'activations': activations
         })
         
+        # Always update single dashboard file
         if epoch % 10 == 0:
             self._generate_html()
     
     def _generate_html(self):
-        """Generate interactive HTML dashboard"""
+        """Generate single HTML dashboard"""
         # Create subplot figure
         fig = make_subplots(
             rows=2, cols=2,
@@ -46,7 +48,5 @@ class HTMLVisualizer:
         activations = self.training_history[-1]['activations']
         fig.add_trace(go.Heatmap(z=activations), row=2, col=1)
         
-        # Save HTML
-        html_path = os.path.join(self.save_dir, 
-                               f'dashboard_{datetime.now():%Y%m%d_%H%M}.html')
-        fig.write_html(html_path)
+        # Save/update single dashboard
+        fig.write_html(self.dashboard_path)
