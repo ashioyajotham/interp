@@ -39,10 +39,15 @@ class SAETrainer:
             )
             wandb.watch(model, log_freq=100)
 
-    def loss_function(self, reconstructed, original, encoded):
-        recon_loss = nn.MSELoss()(reconstructed, original)
+    def compute_loss(self, reconstructed, original, encoded):
+        """Compute reconstruction loss with L1 sparsity penalty"""
+        # MSE reconstruction loss
+        recon_loss = torch.nn.functional.mse_loss(reconstructed, original)
+        
+        # L1 sparsity loss
         sparsity_loss = self.l1_coef * torch.norm(encoded, 1)
-        return recon_loss + sparsity_loss, recon_loss, sparsity_loss
+        
+        return recon_loss + sparsity_loss
 
     def train_step(self, batch):
         self.optimizer.zero_grad()
@@ -130,32 +135,25 @@ def main():
     model_loader = ModelLoader(args.model)
     sample_text = "The quick brown fox jumps over the lazy dog"
     activations = model_loader.get_activations(sample_text)
-
-    # Convert to proper tensor format
-    if isinstance(activations, list):
-        activations = torch.stack(activations)
     
-    # Setup SAE
+    # Reshape activations: (batch_size, seq_length, hidden_size) -> (batch_size * seq_length, hidden_size)
+    activations = activations.view(-1, activations.size(-1))
+    print(f"Input shape: {activations.shape}")
+    
+    # Setup SAE with correct dimensions
     sae = SparseAutoencoder(
-        input_dim=activations.shape[1],
+        input_dim=activations.shape[1],  # hidden_size
         hidden_dim=64
     )
+    print(f"Encoder weight shape: {sae.encoder.weight.shape}")
 
     # Initialize trainer
-    trainer = SAETrainer(
-        model=sae,
-        use_wandb=args.wandb
-    )
+    trainer = SAETrainer(model=sae, use_wandb=args.wandb)
 
-    # Create dataloader with proper tensor
+    # Create dataloader
     dataset = torch.utils.data.TensorDataset(activations)
-    dataloader = torch.utils.data.DataLoader(
-        dataset, 
-        batch_size=32,
-        shuffle=True
-    )
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
 
-    # Train
     print("Starting training...")
     trainer.train(dataloader, args.epochs)
 

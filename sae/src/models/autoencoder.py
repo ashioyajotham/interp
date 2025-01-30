@@ -12,6 +12,9 @@ class SparseAutoencoder(nn.Module):
         self.decoder = nn.Linear(hidden_dim, input_dim)
     
     def forward(self, x):
+        # Ensure input is 2D: (batch_size, input_dim)
+        if len(x.shape) > 2:
+            x = x.view(-1, x.shape[-1])
         encoded = torch.relu(self.encoder(x))
         sparse_encoded = self.apply_sparsity(encoded)
         decoded = self.decoder(sparse_encoded)
