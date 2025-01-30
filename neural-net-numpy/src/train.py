@@ -14,6 +14,7 @@ import numpy as np
 from keras.datasets import mnist
 from network import Dense, Activation
 from visualize import NetworkVisualizer
+from html_visualizer import HTMLVisualizer
 
 # Load MNIST
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -40,6 +41,7 @@ batch_size = 32
 
 # Update training loop
 visualizer = NetworkVisualizer(network)
+html_viz = HTMLVisualizer(network)
 hidden_states = []
 
 for epoch in range(epochs):
@@ -69,3 +71,7 @@ for epoch in range(epochs):
             
     if epoch % 5 == 0:
         visualizer.update(epoch, error/len(X), X[0:1], hidden_states)
+    if epoch % 10 == 0:
+        html_viz.update(epoch, error/len(X), 
+                        network[0].weights, 
+                        hidden_states[-1])
