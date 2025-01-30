@@ -28,7 +28,6 @@ class HTMLVisualizer:
     
     def _generate_html(self):
         """Generate single HTML dashboard"""
-        # Create subplot figure
         fig = make_subplots(
             rows=2, cols=2,
             subplot_titles=('Training Loss', 'Weight Distribution', 
@@ -48,5 +47,42 @@ class HTMLVisualizer:
         activations = self.training_history[-1]['activations']
         fig.add_trace(go.Heatmap(z=activations), row=2, col=1)
         
-        # Save/update single dashboard
+        # Add network architecture
+        layer_sizes = [784] + [layer.weights.shape[0] for layer in self.layers]
+        layer_names = ['Input'] + [f'Dense {i+1}' for i in range(len(self.layers))]
+        
+        # Create nodes for each layer
+        x_positions = np.linspace(0, 1, len(layer_sizes))
+        y_positions = np.zeros_like(x_positions)
+        
+        # Add nodes (layers)
+        fig.add_trace(
+            go.Scatter(
+                x=x_positions,
+                y=y_positions,
+                mode='markers+text',
+                marker=dict(size=20),
+                text=layer_names,
+                textposition='top center',
+                hovertext=[f'Size: {size}' for size in layer_sizes],
+                name='Layers'
+            ),
+            row=2, col=1
+        )
+        
+        # Add edges (connections)
+        for i in range(len(layer_sizes)-1):
+            fig.add_trace(
+                go.Scatter(
+                    x=[x_positions[i], x_positions[i+1]],
+                    y=[y_positions[i], y_positions[i+1]],
+                    mode='lines',
+                    line=dict(width=1),
+                    showlegend=False
+                ),
+                row=2, col=1
+            )
+        
+        # Update layout
+        fig.update_layout(showlegend=True, height=800)
         fig.write_html(self.dashboard_path)
