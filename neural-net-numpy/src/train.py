@@ -13,6 +13,7 @@ Key Components:
 import numpy as np
 from keras.datasets import mnist
 from network import Dense, Activation
+from visualize import NetworkVisualizer
 
 # Load MNIST
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -37,8 +38,12 @@ epochs = 100
 learning_rate = 0.01
 batch_size = 32
 
+visualizer = NetworkVisualizer(network)  # network is already a list of layers
+
 for epoch in range(epochs):
     error = 0
+    hidden_states = []
+    
     # Mini-batch training
     for i in range(0, len(X), batch_size):
         batch_X = X[i:i+batch_size]
@@ -48,6 +53,7 @@ for epoch in range(epochs):
         output = batch_X
         for layer in network:
             output = Activation.relu(layer.forward(output))
+            hidden_states.append(output)
         output = Activation.softmax(output)
         
         # Loss
@@ -58,5 +64,6 @@ for epoch in range(epochs):
         for layer in reversed(network):
             grad = layer.backward(grad, learning_rate)
             
-    if epoch % 10 == 0:
-        print(f'Epoch {epoch}, Loss: {error/len(X)}')
+    # Update visualization in training loop
+    if epoch % 5 == 0:
+        visualizer.update(epoch, error/len(X), X[0:1], hidden_states)
