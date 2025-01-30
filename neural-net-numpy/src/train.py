@@ -1,21 +1,35 @@
+"""
+MNIST Neural Network Training Script
+
+This script implements a basic neural network training loop using backpropagation.
+It uses the MNIST dataset to demonstrate the network's ability to learn digit classification.
+
+Key Components:
+- Data preprocessing: Flattening and normalizing MNIST images
+- Network architecture: 784->128->10 neurons
+- Training loop: Mini-batch gradient descent with backpropagation
+"""
+
 import numpy as np
 from keras.datasets import mnist
 from network import Dense, Activation
 
 # Load and preprocess MNIST
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
+# Flatten 28x28 images to 784x1 vectors and normalize to [0,1]
 X = x_train.reshape(x_train.shape[0], 784, 1) / 255.0
 X = X[:1000]  # Subset for testing
 
-# One-hot encode
+# One-hot encode labels: convert digit to 10-dimensional vector
 Y = np.zeros((y_train[:1000].size, 10, 1))
 for i, y in enumerate(y_train[:1000]):
     Y[i][y][0] = 1
 
 # Network architecture
+# Input layer (784) -> Hidden layer (128) -> Output layer (10)
 network = [
-    Dense(784, 128),
-    Dense(128, 10)
+    Dense(784, 128),  # Hidden layer
+    Dense(128, 10)    # Output layer
 ]
 
 # Training parameters

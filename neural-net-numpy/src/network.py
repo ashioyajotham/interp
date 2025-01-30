@@ -1,5 +1,18 @@
 import numpy as np
 
+class NeuralNetwork:
+    def __init__(self):
+        self.layers = []
+    
+    def add(self, layer):
+        self.layers.append(layer)
+    
+    def forward(self, input_data):
+        output = input_data
+        for layer in self.layers:
+            output = layer.forward(output)
+        return output
+
 class Layer:
     def forward(self, input):
         raise NotImplementedError
@@ -44,4 +57,4 @@ class Activation:
         exp_x = np.exp(x - np.max(x, axis=0, keepdims=True))
         return exp_x / np.sum(exp_x, axis=0, keepdims=True)
 
-__all__ = ['Layer', 'Dense', 'Activation']
+__all__ = ['Layer', 'Dense', 'Activation', 'NeuralNetwork']

@@ -3,6 +3,8 @@
 ## Overview
 A from-scratch implementation of backpropagation using only NumPy. Built to understand the fundamentals of neural networks by implementing gradient descent and the chain rule.
 
+* Backpropagation is the process of calculating the gradient of the loss function with respect to the weights of the network.
+
 ## Features
 - Dense layers with customizable units
 - ReLU and Softmax activations
