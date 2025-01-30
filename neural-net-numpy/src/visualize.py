@@ -12,6 +12,7 @@ class NetworkVisualizer:
         self.layers = layers
         self.save_dir = save_dir
         self.training_losses = []
+        self.activation_history = []
         plt.ion()  # Interactive mode
         self._create_dirs()
         
@@ -37,6 +38,7 @@ class NetworkVisualizer:
     def update(self, epoch, loss, input_data, hidden_states):
         """Update all visualizations"""
         self.training_losses.append(loss)
+        self.activation_history.extend(hidden_states[-1])
         
         # Update weights
         self.weight_ax.clear()
@@ -58,10 +60,11 @@ class NetworkVisualizer:
         self.loss_ax.set_yscale('log')
         
         # Update t-SNE visualization
-        if epoch % 10 == 0 and epoch > 0:
+        if epoch % 10 == 0 and len(self.activation_history) > 30:
             self.tsne_ax.clear()
-            tsne = TSNE(n_components=2)
-            projection = tsne.fit_transform(hidden_states[-1])
+            tsne = TSNE(n_components=2, perplexity=min(30, len(self.activation_history)-1))
+            samples = np.array(self.activation_history[-100:])  # Last 100 samples
+            projection = tsne.fit_transform(samples)
             self.tsne_ax.scatter(projection[:, 0], projection[:, 1], c='cyan', alpha=0.5)
             self.tsne_ax.set_title('Hidden Layer Representation')
         

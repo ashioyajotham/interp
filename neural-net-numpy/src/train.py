@@ -38,23 +38,26 @@ epochs = 100
 learning_rate = 0.01
 batch_size = 32
 
-visualizer = NetworkVisualizer(network)  # network is already a list of layers
+# Update training loop
+visualizer = NetworkVisualizer(network)
+hidden_states = []
 
 for epoch in range(epochs):
     error = 0
-    hidden_states = []
-    
     # Mini-batch training
     for i in range(0, len(X), batch_size):
         batch_X = X[i:i+batch_size]
         batch_Y = Y[i:i+batch_size]
         
-        # Forward
+        # Forward pass with activation collection
         output = batch_X
+        current_states = []
         for layer in network:
             output = Activation.relu(layer.forward(output))
-            hidden_states.append(output)
+            current_states.append(output)
         output = Activation.softmax(output)
+        
+        hidden_states = current_states
         
         # Loss
         error -= np.mean(np.sum(batch_Y * np.log(output + 1e-15), axis=1))
@@ -64,6 +67,5 @@ for epoch in range(epochs):
         for layer in reversed(network):
             grad = layer.backward(grad, learning_rate)
             
-    # Update visualization in training loop
     if epoch % 5 == 0:
         visualizer.update(epoch, error/len(X), X[0:1], hidden_states)
