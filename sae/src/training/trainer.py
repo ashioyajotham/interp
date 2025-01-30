@@ -3,6 +3,14 @@ import torch.nn as nn
 import torch.optim as optim
 from typing import Optional
 import wandb
+import argparse
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from src.models.autoencoder import SparseAutoencoder
+from src.models.model_loader import ModelLoader
 
 class SAETrainer:
     def __init__(
@@ -38,15 +46,13 @@ class SAETrainer:
 
     def train_step(self, batch):
         self.optimizer.zero_grad()
-        reconstructed, encoded = self.model(batch)
-        loss, recon_loss, sparsity_loss = self.loss_function(reconstructed, batch, encoded)
+        # Unpack batch tuple and ensure tensor
+        inputs = batch[0] if isinstance(batch, (list, tuple)) else batch
+        reconstructed, encoded = self.model(inputs)
+        loss = self.compute_loss(reconstructed, inputs, encoded)
         loss.backward()
         self.optimizer.step()
-        return {
-            'total_loss': loss.item(),
-            'recon_loss': recon_loss.item(),
-            'sparsity_loss': sparsity_loss.item()
-        }
+        return loss.item(), encoded
 
     def train_epoch(self, dataloader, epoch: int):
         self.model.train()
@@ -97,3 +103,61 @@ class SAETrainer:
             plt.close()
             buf.seek(0)
             return Image.open(buf)
+
+    def train(self, dataloader, epochs):
+        for epoch in range(epochs):
+            total_loss = 0
+            for batch in dataloader:
+                loss, encoded = self.train_step(batch)
+                total_loss += loss
+                
+                if self.use_wandb:
+                    wandb.log({
+                        "loss": loss,
+                        "sparsity": (encoded > 0).float().mean().item()
+                    })
+                    
+            print(f"Epoch {epoch}: Loss = {total_loss/len(dataloader):.4f}")
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--wandb", action="store_true")
+    parser.add_argument("--model", default="bert", choices=["bert", "gpt2"])
+    parser.add_argument("--epochs", type=int, default=20)
+    args = parser.parse_args()
+
+    # Initialize model and get data
+    model_loader = ModelLoader(args.model)
+    sample_text = "The quick brown fox jumps over the lazy dog"
+    activations = model_loader.get_activations(sample_text)
+
+    # Convert to proper tensor format
+    if isinstance(activations, list):
+        activations = torch.stack(activations)
+    
+    # Setup SAE
+    sae = SparseAutoencoder(
+        input_dim=activations.shape[1],
+        hidden_dim=64
+    )
+
+    # Initialize trainer
+    trainer = SAETrainer(
+        model=sae,
+        use_wandb=args.wandb
+    )
+
+    # Create dataloader with proper tensor
+    dataset = torch.utils.data.TensorDataset(activations)
+    dataloader = torch.utils.data.DataLoader(
+        dataset, 
+        batch_size=32,
+        shuffle=True
+    )
+
+    # Train
+    print("Starting training...")
+    trainer.train(dataloader, args.epochs)
+
+if __name__ == "__main__":
+    main()

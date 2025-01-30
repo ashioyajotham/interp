@@ -3,10 +3,9 @@ import torch
 
 class ModelLoader:
     SUPPORTED_MODELS = {
-        'gpt2': 'gpt2',
-        'gpt2-medium': 'gpt2-medium',
-        'bert-base': 'bert-base-uncased',
-        'roberta-base': 'roberta-base'
+        "bert": "bert-base-uncased",
+        "gpt2": "gpt2",
+        "roberta": "roberta-base"
     }
 
     def __init__(self, model_name: str):
@@ -16,6 +15,7 @@ class ModelLoader:
         self.model_name = self.SUPPORTED_MODELS[model_name]
         self.model = AutoModel.from_pretrained(self.model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.cached_activations = None
         
     def get_layer_activations(self, text: str, layer_idx: int = -1) -> torch.Tensor:
         inputs = self.tokenizer(text, return_tensors="pt")
@@ -24,4 +24,15 @@ class ModelLoader:
         
         # Get activations from specified layer
         hidden_states = outputs.hidden_states[layer_idx]
-        return hidden_states.squeeze(0)  # Remove batch dimension
+        return hidden_states
+        
+    def get_activations(self, text: str = None, layer_idx: int = -1):
+        """Get model activations for input text"""
+        if text is None and self.cached_activations is None:
+            raise ValueError("Please provide text for analysis")
+            
+        if text is not None:
+            activations = self.get_layer_activations(text, layer_idx)
+            self.cached_activations = activations
+        
+        return self.cached_activations

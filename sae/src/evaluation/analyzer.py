@@ -33,18 +33,20 @@ class SAEAnalyzer:
             plt.savefig(save_path)
         plt.close()
 
-    def analyze_sparsity(self, dataloader) -> dict:
-        """Analyze sparsity patterns in activations"""
-        total_activations = 0
-        active_neurons = 0
-        
+    def analyze_sparsity(self, input_data):
         with torch.no_grad():
-            for batch in dataloader:
-                _, encoded = self.model(batch)
-                total_activations += encoded.shape[0] * encoded.shape[1]
-                active_neurons += (encoded > 0).sum().item()
-        
-        return {
-            'sparsity_ratio': 1 - (active_neurons / total_activations),
-            'dead_neurons': len(self.model.get_dead_neurons())
-        }
+            _, encoded = self.model(input_data)
+            # Debug shape
+            print(f"Encoded shape: {encoded.shape}")
+            
+            if len(encoded.shape) != 2:
+                encoded = encoded.view(encoded.size(0), -1)
+            
+            total_activations = encoded.shape[0] * encoded.shape[1]
+            active_neurons = torch.sum(encoded > 0).item()
+            
+            return {
+                "sparsity": 1.0 - (active_neurons / total_activations),
+                "active_neurons": active_neurons,
+                "total_activations": total_activations
+            }

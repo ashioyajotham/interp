@@ -12,7 +12,12 @@ class WandBVisualizer:
             project="sae-interpretability",
             name=run_name,
             tags=[model_name],
-            resume=True
+            config={
+                "model": model_name,
+                "learning_rate": 0.001,
+                "hidden_dim": 64,
+                "sparsity_param": 0.1
+            }
         )
         
     def log_feature_embeddings(self, features: torch.Tensor, metadata: Optional[Dict] = None):
@@ -74,6 +79,40 @@ class WandBVisualizer:
             title="Training Progress",
             xname="epoch"
         )})
+
+    def log_training_step(self, step: int, loss: float, activations: torch.Tensor, 
+                         weights: torch.Tensor):
+        """Log training metrics and visualizations"""
+        # Calculate sparsity
+        sparsity = (activations > 0).float().mean().item()
+        
+        # Create weight distribution plot
+        fig, ax = plt.subplots()
+        ax.hist(weights.flatten().cpu().numpy(), bins=50)
+        ax.set_title("Weight Distribution")
+        
+        # Log metrics
+        wandb.log({
+            "step": step,
+            "loss": loss,
+            "sparsity": sparsity,
+            "weight_dist": wandb.Image(fig),
+            "activation_heatmap": wandb.Image(
+                activations.T.cpu().numpy(),
+                caption="Neuron Activations"
+            )
+        })
+        plt.close()
+    
+    def log_feature_directions(self, features: torch.Tensor, step: int):
+        """Log learned feature directions"""
+        wandb.log({
+            "step": step,
+            "feature_directions": wandb.Image(
+                features.T.cpu().numpy(),
+                caption=f"Feature Directions at Step {step}"
+            )
+        })
 
     def finish(self):
         """Close the W&B run"""
