@@ -1,3 +1,25 @@
+"""
+Sparse Autoencoder Interpretability Dashboard
+==========================================
+
+This dashboard provides interactive visualization and analysis tools for exploring
+sparse autoencoder behavior on transformer models.
+
+Features:
+---------
+- Neuron-level activation analysis
+- Feature importance visualization
+- Token attribution mapping
+- Sparsity metrics tracking
+
+Usage:
+------
+Run the dashboard:
+```bash
+streamlit run src/dashboard/app.py
+```
+"""
+
 import streamlit as st
 import torch
 import numpy as np
@@ -42,7 +64,11 @@ class SAEDashboard:
     def neuron_inspector(self, activations, tokens):
         st.subheader("Neuron Analysis")
         
-        # Neuron selector with importance score
+        # Ensure lengths match
+        tokens = tokens[:activations.shape[0]]
+        x_positions = list(range(len(tokens)))  # Convert range to list
+        
+        # Neuron importance scoring
         importance = torch.norm(activations, dim=0)
         top_neurons = torch.argsort(importance, descending=True)
         
@@ -54,13 +80,14 @@ class SAEDashboard:
         
         col1, col2 = st.columns(2)
         with col1:
-            # Interactive activation timeline
+            # Activation timeline
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 y=activations[:, neuron_id].numpy(),
-                x=tokens,
+                x=x_positions,
+                text=tokens,
                 mode='lines+markers',
-                hovertemplate="Token: %{x}<br>Activation: %{y:.3f}"
+                hovertemplate="Token: %{text}<br>Activation: %{y:.3f}"
             ))
             fig.update_layout(
                 title=f"Neuron {neuron_id} Activation Pattern",
@@ -70,13 +97,18 @@ class SAEDashboard:
             st.plotly_chart(fig)
             
         with col2:
-            # Token attribution with highlighting
-            token_scores = activations[:, neuron_id].numpy()
-            fig = px.bar(
-                x=tokens,
-                y=token_scores,
+            # Token attribution
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=x_positions,
+                y=activations[:, neuron_id].numpy(),
+                text=tokens,
+                hovertemplate="Token: %{text}<br>Score: %{y:.3f}"
+            ))
+            fig.update_layout(
                 title="Token Attribution",
-                labels={"x": "Token", "y": "Attribution Score"}
+                xaxis_title="Token Position",
+                yaxis_title="Attribution Score"
             )
             st.plotly_chart(fig)
             
@@ -113,21 +145,32 @@ class SAEDashboard:
     def metrics_dashboard(self, analyzer, activations):
         st.subheader("Analysis Metrics")
         
-        # Sparsity analysis
-        stats = analyzer.analyze_sparsity(activations)
-        
-        cols = st.columns(3)
-        cols[0].metric("Sparsity", f"{stats['sparsity']:.3f}")
-        cols[1].metric("Active Neurons", stats['active_neurons'])
-        cols[2].metric("Dead Neurons", stats['total_neurons'] - stats['active_neurons'])
-        
-        # Distribution plots
-        fig = px.histogram(
-            activations.flatten().numpy(),
-            title="Activation Distribution",
-            marginal="box"
-        )
-        st.plotly_chart(fig)
+        try:
+            # Get total neurons from activation shape
+            total_neurons = activations.shape[1]
+            
+            # Sparsity analysis
+            stats = analyzer.analyze_sparsity(activations)
+            stats['total_neurons'] = total_neurons  # Add total neurons to stats
+            
+            # Display metrics
+            cols = st.columns(3)
+            cols[0].metric("Sparsity", f"{stats['sparsity']:.3f}")
+            cols[1].metric("Active Neurons", stats['active_neurons'])
+            cols[2].metric("Dead Neurons", stats['total_neurons'] - stats['active_neurons'])
+            
+            # Distribution plots
+            fig = px.histogram(
+                activations.flatten().numpy(),
+                title="Activation Distribution",
+                marginal="box",
+                labels={"value": "Activation", "count": "Frequency"}
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            
+        except Exception as e:
+            st.error(f"Error computing metrics: {str(e)}")
+            st.exception(e)  # Show detailed error trace
     
     def run(self):
         configs = self.sidebar_config()
